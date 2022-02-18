@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>to-do list</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <style>
+        .nightOwl {
+            background-color: rgb(31, 31, 31);
+            color: rgb(245, 245, 245);
+        }
+
+        .sunnySideUp {
+            background-color: rgb(245, 245, 245);
+            color: rgb(31, 31, 31);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row nightOwl">
+            <div class="col-1 col-sm-1"></div>
+            <div class="col-11 col-sm-11">
+                <h1>tasker</h1>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-1 col-sm-1"></div>
+            <div class="col-1 col-sm-1">
+                <button type="button" class="btn btn-outline-dark" id="newBtn">
+                    new
+                </button>
+            </div>
+        </div>
+        <hr>
+    </div>
+
+    <div class="container">
+        <div class="row" id="taskContainer">
+        </div>
+    </div>
+
+    <script>
+
+        function retrieveAllTasks() {
+            let parsedTasks, parsedKeys, storedTasks;
+            let taskerObject = localStorage.getItem("taskerObject");
+
+            if (!taskerObject) {
+                localStorage.setItem("taskerObject", "");
+            }
+            else {
+                parsedTasks = JSON.parse(taskerObject);
+                parsedKeys = Object.keys(parsedTasks);
+                storedTasks = [];
+
+                for (var i = 0; i < parsedKeys.length; i++) {
+                    storedTasks.push(parsedTasks[i]);
+                };
+                if (storedTasks)
+                    storedTasks.forEach(task => retrieveTasks(task));
+
+                function retrieveTasks(taskObj) {
+                    let status, color, foundTask = taskObj;
+                    if(foundTask.completed === false) {
+                        status = "Ative";
+                        color = "tomato";
+                    } else {
+                        status = "Done!";
+                        color = "green";
+                    }
+                    let divElement = document.createElement("div");
+                    divElement.innerHTML = `
+                    <div class="col-12 col-sm-12">
+                        <div class="row">
+                            <div class="col-8 col-sm-8">
+                                <h5>${foundTask.taskTitle}</h5>
+                            </div>
+                            <div class="col-4 col-sm-4">
+                                <h6>Task status: <span style="color: ${color};">${status}</span></h6>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-sm-12">
+                                <p>${foundTask.taskDescription}</p>
+                                <h6>Date created: <span>${foundTask.taskCreated}</span></h6>
+                            </div>
+                        </div>
+                    </div>
+                    <hr/>
+                    `
+                    document.getElementById("taskContainer").prepend(divElement);
+                };
+            };
+        };
+
+        retrieveAllTasks();
+
+        function createNewTask() {
+
+            let taskTitle = prompt("Enter task title: ");
+            let taskDescription = prompt("Task description: ");
+            let taskCreated = Date();
+
+            let divElement = document.createElement("div");
+            divElement.innerHTML = `
+            <div class="col-12 col-sm-12">
+                <h3>${taskTitle}</h3>
+                <p>${taskDescription}</p>
+                <h6>Date created: <span>${taskCreated}</span></h6>
+            </div>
+            <hr/>
+            `
+            document.getElementById("taskContainer").prepend(divElement);
+
+            let taskKey = 0;
+            let savedTask = {};
+            let currentLocalStorage;
+
+            if (localStorage.getItem("taskerObject") === "") {
+                savedTask[taskKey] = {
+                    taskTitle,
+                    taskDescription,
+                    taskCreated,
+                    "completed": false,
+                };
+
+                localStorage.setItem("taskerObject", JSON.stringify(savedTask));
+            } else {
+                currentLocalStorage = JSON.parse(localStorage.getItem("taskerObject"));
+                taskKey = Object.keys(currentLocalStorage).length;
+                currentLocalStorage[taskKey] = {
+                    taskTitle,
+                    taskDescription,
+                    taskCreated,
+                    "completed": false,
+                }
+                localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
+            };
+        };
+
+        document.getElementById("newBtn").addEventListener("click", createNewTask);
+
+    </script>
+
+</body>
+
+</html>
