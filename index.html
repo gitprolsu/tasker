@@ -18,6 +18,19 @@
             background-color: rgb(245, 245, 245);
             color: rgb(31, 31, 31);
         }
+
+        .taskDescription {
+            text-align: justify;
+        }
+
+        .taskTimeStamp,
+        .taskStatus {
+            text-align: center;
+        }
+
+        .postedTask {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -25,25 +38,33 @@
 
     <div class="container-fluid">
         <div class="row nightOwl">
-            <div class="col-1 col-sm-1"></div>
-            <div class="col-11 col-sm-11">
+            <div class="col-2 col-sm-2"></div>
+            <div class="col-8 col-sm-8">
                 <h1>tasker</h1>
             </div>
         </div>
         <br>
         <div class="row">
-            <div class="col-1 col-sm-1"></div>
-            <div class="col-1 col-sm-1">
+            <div class="col-sm-2"></div>
+            <div class="col-6 col-sm-2">
+                <input type="text" class="form-control" id="taskName" placeholder="Enter your task here...">
+            </div>
+            <div class="col-6 col-sm-2" style="display: none;">
+                <input type="text" class="form-control" id="taskDescription" placeholder="Any additional notes?">
+            </div>
+            <div class="col-12 col-sm-2">
                 <button type="button" class="btn btn-outline-dark" id="newBtn">
-                    new
+                    post
                 </button>
             </div>
         </div>
-        <hr>
+        <hr />
     </div>
 
     <div class="container">
-        <div class="row" id="taskContainer">
+        <div class="row">
+            <div class="col-12 col-sm-12" id="taskContainer">
+            </div>
         </div>
     </div>
 
@@ -64,33 +85,39 @@
                 for (var i = 0; i < parsedKeys.length; i++) {
                     storedTasks.push(parsedTasks[i]);
                 };
+
                 if (storedTasks)
                     storedTasks.forEach(task => retrieveTasks(task));
 
                 function retrieveTasks(taskObj) {
                     let status, color, foundTask = taskObj;
-                    if(foundTask.completed === false) {
-                        status = "Ative";
+                    if (foundTask.completed === false) {
+                        status = "Active";
                         color = "tomato";
                     } else {
                         status = "Done!";
                         color = "green";
                     }
+
                     let divElement = document.createElement("div");
+                    divElement.setAttribute("id", foundTask.taskId);
+
                     divElement.innerHTML = `
-                    <div class="col-12 col-sm-12">
+                    <div class="col-12 col-sm-12 postedTask">
                         <div class="row">
-                            <div class="col-8 col-sm-8">
-                                <h5>${foundTask.taskTitle}</h5>
-                            </div>
-                            <div class="col-4 col-sm-4">
-                                <h6>Task status: <span style="color: ${color};">${status}</span></h6>
+                            <div class="col-12 col-sm-12">
+                                <h4>${foundTask.taskTitle}</h4>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-12 col-sm-12">
+                            <div class="col-12 col-sm-12 taskDescription">
                                 <p>${foundTask.taskDescription}</p>
-                                <h6>Date created: <span>${foundTask.taskCreated}</span></h6>
+                            </div>
+                            <div class="col-4 col-sm-2 taskStatus">
+                                <h6>Status: <span style="color: ${color};">${status}</span></h6>
+                            </div>
+                            <div class="col-8 col-sm-4 taskTimeStamp">
+                                <h6>Posted: <span style="color: ${color};">${foundTask.timeStamp}</span></h6>
                             </div>
                         </div>
                     </div>
@@ -101,24 +128,48 @@
             };
         };
 
-        retrieveAllTasks();
-
         function createNewTask() {
 
-            let taskTitle = prompt("Enter task title: ");
-            let taskDescription = prompt("Task description: ");
-            let taskCreated = Date();
+            let taskTitle = document.getElementById("taskName").value;
+
+            let taskDescription = document.getElementById("taskDescription").value;
+            let timeStamp = "";
+            let taskId, newDate = Date();
+            newDate = newDate.split(" ");
+            taskId = newDate[1] + newDate[2] + newDate[3] + newDate[4];
+
+            for (var i = 0; i < 5; i++) {
+                timeStamp += `${newDate[i]} `;
+            };
 
             let divElement = document.createElement("div");
+            divElement.setAttribute("id", taskId);
+
             divElement.innerHTML = `
-            <div class="col-12 col-sm-12">
-                <h3>${taskTitle}</h3>
-                <p>${taskDescription}</p>
-                <h6>Date created: <span>${taskCreated}</span></h6>
-            </div>
-            <hr/>
-            `
+                    <div class="col-12 col-sm-12 postedTask">
+                        <div class="row">
+                            <div class="col-12 col-sm-12">
+                                <h4>${taskTitle}</h4>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-sm-12 taskDescription">
+                                <p>${taskDescription}</p>
+                            </div>
+                            <div class="col-4 col-sm-2 taskStatus">
+                                <h6>Status: <span style="color: tomato;">Active</span></h6>
+                            </div>
+                            <div class="col-8 col-sm-4 taskTimeStamp">
+                                <h6>Posted: <span style="color: tomato;">${timeStamp}</span></h6>
+                            </div>
+                        </div>
+                    </div>
+                    <hr/>
+                    `
             document.getElementById("taskContainer").prepend(divElement);
+            document.getElementById("taskName").value = "";
+            document.getElementById("taskDescription").value = "";
+            document.getElementById("taskDescription").parentElement.style.display = "none";
 
             let taskKey = 0;
             let savedTask = {};
@@ -126,9 +177,10 @@
 
             if (localStorage.getItem("taskerObject") === "") {
                 savedTask[taskKey] = {
+                    taskId,
                     taskTitle,
                     taskDescription,
-                    taskCreated,
+                    timeStamp,
                     "completed": false,
                 };
 
@@ -137,16 +189,27 @@
                 currentLocalStorage = JSON.parse(localStorage.getItem("taskerObject"));
                 taskKey = Object.keys(currentLocalStorage).length;
                 currentLocalStorage[taskKey] = {
+                    taskId,
                     taskTitle,
                     taskDescription,
-                    taskCreated,
+                    timeStamp,
                     "completed": false,
                 }
                 localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
             };
         };
 
+        retrieveAllTasks();
+
         document.getElementById("newBtn").addEventListener("click", createNewTask);
+        document.getElementById("taskName").addEventListener("keyup", function() {
+            let enteredValue = this.value;
+            if(enteredValue) {
+                document.getElementById("taskDescription").parentElement.style.display = "";
+            } else if (!enteredValue) {
+                document.getElementById("taskDescription").parentElement.style.display = "none";
+            }
+        });
 
     </script>
 
