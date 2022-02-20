@@ -1,0 +1,29 @@
+    .nightOwl,
+    .updateBox,
+    #taskName,
+    #taskDescription {
+        background-color: rgb(33, 34, 39);
+        color: rgb(245, 245, 245);
+    }
+
+    .headerOwl {
+        background-color: rgb(41, 42, 47);
+        color: rgb(231, 227, 227);
+    }
+    .sunnySideUp {
+        background-color: rgb(245, 245, 245);
+        color: rgb(31, 31, 31);
+    }
+
+    .taskDescription {
+        text-align: justify;
+    }
+
+    .taskTimeStamp,
+    .taskStatus {
+        text-align: center;
+    }
+
+    .postedTask {
+        cursor: pointer;
+    }
