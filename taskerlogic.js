@@ -19,17 +19,32 @@ function retrieveAllTasks() {
             storedTasks.forEach(task => retrieveTasks(task));
 
         function retrieveTasks(taskIndex) {
-            let status, color, foundTask, taskId = taskIndex;
+            let status, color, timeStat, timeStatColor, taskTimeStamp, foundTask, taskId = taskIndex;
             foundTask = JSON.parse(localStorage.taskerObject);
             foundTask = foundTask[taskId];
 
             if (foundTask.completed === false) {
                 status = "Active";
                 color = "tomato";
-            } else {
-                status = "Done!";
+            };
+
+            if(foundTask.updatedTime === "") {
+                timeStat = "Posted";
+                timeStatColor = "tomato";
+                taskTimeStamp = foundTask.timeStamp;
+            } else if (foundTask.updatedTime !== ""){
+                timeStat = "Updated";
+                timeStatColor = "rgb(0, 113, 365)";
+                taskTimeStamp = foundTask.updatedTime;
+            };
+            
+            if (foundTask.completed === true) {
+                status = "Done";
                 color = "green";
-            }
+                timeStat = "Completed";
+                timeStatColor = "green";
+                taskTimeStamp = foundTask.timeCompleted;
+            };
 
             let divElement = document.createElement("div");
             divElement.setAttribute("id", foundTask.taskId);
@@ -49,7 +64,7 @@ function retrieveAllTasks() {
                                 <h6>Status: <span style="color: ${color};">${status}</span></h6>
                             </div>
                             <div class="col-9 col-sm-5 taskTimeStamp">
-                                <h6>Posted: <span style="color: ${color};">${foundTask.timeStamp}</span></h6>
+                                <h6>${timeStat}: <span style="color: ${timeStatColor};">${taskTimeStamp}</span></h6>
                             </div>
                         </div>
                     </div>
@@ -66,7 +81,6 @@ function retrieveAllTasks() {
         });
     };
 };
-
 
 function createNewTask() {
 
@@ -128,6 +142,7 @@ function createNewTask() {
                 taskDescription,
                 timeStamp,
                 "updatedTime": "",
+                "timeCompleted": "",
                 "completed": false,
             };
 
@@ -141,6 +156,7 @@ function createNewTask() {
                 taskDescription,
                 timeStamp,
                 "updatedTime": "",
+                "timeCompleted": "",
                 "completed": false,
             }
             localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
@@ -153,7 +169,6 @@ function showUpdateTasker(data) {
     let taskId = data.path[4].id;
 
     let taskerObject = JSON.parse(localStorage.taskerObject);
-    // console.log(taskerObject[taskId]);
     taskerObject = taskerObject[taskId];
 
     let tempElement = document.createElement("div");
@@ -161,20 +176,25 @@ function showUpdateTasker(data) {
 
     tempElement.innerHTML = `
     <div class="row">
-        <div class="col-12 col-sm-5">
+        <div class="col-12 col-sm-4">
             <input id="taskToUpdate" style="background-color: rgb(33, 34, 39); color: rgb(245, 245, 245)" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
         </div>
-        <div class="col-12 col-sm-5">
+        <div class="col-12 col-sm-4">
             <input id="descriptionToUpdate" style="background-color: rgb(33, 34, 39); color: rgb(245, 245, 245)" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
         </div>
-        <div class="col-6 col-sm-1">
+        <div class="col-4 col-sm-1">
             <button type="button" onclick="postUpdate('${taskId}')" class="btn btn-outline-warning" id="updateBtn">
                 update
             </button>
         </div>
-        <div class="col-6 col-sm-1">
+        <div class="col-4 col-sm-1">
             <button type="button" onclick="deletePost('${taskId}')" class="btn btn-outline-danger" id="deleteBtn">
                 delete
+            </button>
+        </div>
+        <div class="col-4 col-sm-1">
+            <button type="button" onclick="taskDone('${taskId}')" class="btn btn-outline-success" id="doneBtn">
+                done
             </button>
         </div>
     </div>
@@ -184,35 +204,55 @@ function showUpdateTasker(data) {
 };
 
 function postUpdate(dataId) {
-    console.log(`Update post with id: ${dataId}`);
+    // console.log(`Update post with id: ${dataId}`);
 
     let currentLocalStorage = JSON.parse(localStorage.taskerObject);
 
     let updatedTitle = document.getElementById("taskToUpdate").value;
     let updatedDescription = document.getElementById("descriptionToUpdate").value;
 
-    currentLocalStorage[dataId].taskTitle = updatedTitle;
-    currentLocalStorage[dataId].taskDescription = updatedDescription;
-    let newTimeStamp = "";
-    let newDateUpdate = new Date();
-    newDateUpdate = newDateUpdate.toString().split(" ");
+    if (!updatedTitle) {
+        window.location.reload();
+    } else {
+        currentLocalStorage[dataId].taskTitle = updatedTitle;
+        currentLocalStorage[dataId].taskDescription = updatedDescription;
+        let newTimeStamp = "";
+        let newDateUpdate = new Date();
+        newDateUpdate = newDateUpdate.toString().split(" ");
 
-    for(var i = 0; i < 5; i++) {
-        newTimeStamp += `${newDateUpdate[i]} `;
+        for (var i = 0; i < 5; i++) {
+            newTimeStamp += `${newDateUpdate[i]} `;
+        };
+
+        currentLocalStorage[dataId].updatedTime = newTimeStamp;
+
+        localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
+        window.location.reload();
     };
-
-    currentLocalStorage[dataId].updatedTime = newTimeStamp;
-
-    localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-    window.location.reload();
 };
 
 function deletePost(dataId) {
-    console.log(`Delete post with id: ${dataId}`);
+    // console.log(`Delete post with id: ${dataId}`);
     let currentStorage = JSON.parse(localStorage.taskerObject);
 
     delete currentStorage[dataId];
     localStorage.setItem("taskerObject", JSON.stringify(currentStorage));
+    window.location.reload();
+};
+
+function taskDone(dataId) {
+    // console.log(`Task with id ${dataId} completed. Yay!`);
+    let currentLocalStorage = JSON.parse(localStorage.taskerObject);
+    currentLocalStorage[dataId].completed = true;
+    let completeTimeStamp = "";
+    let completedDate = new Date();
+    completedDate = completedDate.toString().split(" ");
+    for (var i = 0; i < 5; i++) {
+        completeTimeStamp += `${completedDate[i]} `;
+    };
+
+    currentLocalStorage[dataId].timeCompleted = completeTimeStamp;
+    localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
     window.location.reload();
 };
 
