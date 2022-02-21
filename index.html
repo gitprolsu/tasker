@@ -13,6 +13,7 @@
 
 <body class="nightOwl">
     <div class="container-fluid">
+        <!-- header -->
         <div class="row headerOwl">
             <div class="col-2 col-sm-2"></div>
             <div class="col-8 col-sm-8">
@@ -20,6 +21,8 @@
             </div>
         </div>
         <br>
+
+        <!-- post area -->
         <div class="row">
             <div class="col-sm-2"></div>
             <div class="col-6 col-sm-3">
@@ -36,27 +39,36 @@
         </div>
         <hr />
 
+        <!-- active tasks: -->
         <div class="container-fluid">
-                <!-- update current task: -->
             <div class="row">
                 <div class="col-sm-2"></div>
-                    <div class="col-12 col-sm-8" id="updateBlock" style="display: none;"></div>
-                <div class="col-sm-2"></div>
-            </div>
-            <div class="row">
-                <div class="col-sm-2"></div>
-
-                <!-- active tasks: -->
                 <div class="col-12 col-sm-8" id="taskContainer"></div>
-
+                <!-- <div class="col-12 col-sm-3" id="taskerMetrics">
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Cuurent day</h5>
+                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Archive</h5>
+                            
+                        </div>
+                    </div>
+                </div> -->
                 <div class="col-sm-2"></div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12 col-sm-12">
-                <!-- footer -->
+        <!-- footer -->
+        <div class="row" id="footer">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-8">
+                <h6>prolsu inc.</h6>
             </div>
+            <div class="col-sm-2"></div>
         </div>
     </div>
     <script src="taskerlogic.js"></script>

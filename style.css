@@ -27,3 +27,24 @@
     .postedTask {
         cursor: pointer;
     }
+
+    #deleteBtn,
+    #updateBtn,
+    #doneBtn {
+        max-width: 40px;
+        max-height: 40px;
+    }
+
+    #footer {
+        bottom: 0;
+        background-color: rgb(41, 42, 47);
+        text-align: center;
+        position: fixed;
+        width: 100%;
+    }
+
+    /* #header {
+        top: 0;
+        position: fixed;
+        width: 100%;
+    } */

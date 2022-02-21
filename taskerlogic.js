@@ -28,16 +28,16 @@ function retrieveAllTasks() {
                 color = "tomato";
             };
 
-            if(foundTask.updatedTime === "") {
+            if (foundTask.updatedTime === "") {
                 timeStat = "Posted";
                 timeStatColor = "tomato";
                 taskTimeStamp = foundTask.timeStamp;
-            } else if (foundTask.updatedTime !== ""){
+            } else if (foundTask.updatedTime !== "") {
                 timeStat = "Updated";
                 timeStatColor = "rgb(0, 113, 365)";
                 taskTimeStamp = foundTask.updatedTime;
             };
-            
+
             if (foundTask.completed === true) {
                 status = "Done";
                 color = "green";
@@ -75,10 +75,19 @@ function retrieveAllTasks() {
     };
 
     let activeTasks = document.getElementsByClassName("postedTask");
+    
     for (var i = 0; i < activeTasks.length; i++) {
-        activeTasks[i].parentElement.addEventListener("click", function (data) {
-            showUpdateTasker(data);
-        });
+        let viewport = this.visualViewport.width;
+
+        if (viewport < 1500) {
+            activeTasks[i].parentElement.addEventListener("touchStart", function (data) {
+                showUpdateTasker(data);
+            });
+        } else {
+            activeTasks[i].parentElement.addEventListener("click", function (data) {
+                showUpdateTasker(data);
+            });
+        };
     };
 };
 
@@ -172,7 +181,6 @@ function showUpdateTasker(data) {
     taskerObject = taskerObject[taskId];
 
     let tempElement = document.createElement("div");
-    
 
     tempElement.innerHTML = `
     <div class="row">
@@ -183,19 +191,13 @@ function showUpdateTasker(data) {
             <input id="descriptionToUpdate" style="background-color: rgb(33, 34, 39); color: rgb(245, 245, 245)" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
         </div>
         <div class="col-4 col-sm-1">
-            <button type="button" onclick="postUpdate('${taskId}')" class="btn btn-outline-warning" id="updateBtn">
-                update
-            </button>
+            <img src="icons/refresh.png" type="button" onclick="postUpdate('${taskId}')" id="updateBtn" title="update"/>
         </div>
         <div class="col-4 col-sm-1">
-            <button type="button" onclick="deletePost('${taskId}')" class="btn btn-outline-danger" id="deleteBtn">
-                delete
-            </button>
+            <img src="icons/trash (1).png" type="button" onclick="deletePost('${taskId}')" id="deleteBtn" title="delete"/>
         </div>
         <div class="col-4 col-sm-1">
-            <button type="button" onclick="taskDone('${taskId}')" class="btn btn-outline-success" id="doneBtn">
-                done
-            </button>
+            <img src="icons/done.png" type="button" onclick="taskDone('${taskId}')" id="doneBtn" title="complete"/>
         </div>
     </div>
     <hr/>
