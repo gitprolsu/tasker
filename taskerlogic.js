@@ -70,7 +70,7 @@ function retrieveAllTasks() {
                     <div class="col-12 col-sm-12">
                         <div class="row">
                             <div class="col-12 col-sm-12">
-                                <h4 class="postedTask">${foundTask.taskTitle}</h4>
+                                <h4 type="button" class="postedTask">${foundTask.taskTitle}</h4>
                             </div>
                         </div>
                         <div class="row">
@@ -126,7 +126,7 @@ function createNewTask() {
                     <div class="col-12 col-sm-12">
                         <div class="row">
                             <div class="col-12 col-sm-12">
-                                <h4 class="postedTask" onclick="showUpdateTasker('${taskId}')">${taskTitle}</h4>
+                                <h4 class="postedTask" type="button">${taskTitle}</h4>
                             </div>
                         </div>
                         <div class="row">
