@@ -1,21 +1,31 @@
-    .nightOwl,
-    .updateBox,
-    #taskName,
-    #taskDescription {
+    .nightOwl {
         background-color: rgb(33, 34, 39);
         color: rgb(245, 245, 245);
+    }
+
+    .inputBoxDark {
+        background-color: rgb(33, 34, 39);
+        color: rgb(245, 245, 245);
+    }
+
+    .inputBoxLight {
+        background-color: rgb(245, 245, 245);
+        color: rgb(31, 31, 31);
     }
 
     .headerOwl {
         background-color: rgb(41, 42, 47);
         color: rgb(231, 227, 227);
     }
-    .sunnySideUp {
+    .lightMode {
         background-color: rgb(245, 245, 245);
         color: rgb(31, 31, 31);
     }
 
     .taskDescription {
+        font-size: 20px;
+        font-weight: 600;
+        font-family: 'Montserrat', sans-serif;
         text-align: justify;
     }
 
@@ -25,19 +35,36 @@
     }
 
     .postedTask {
+        font-size: 28px;
         cursor: pointer;
+        font-family: 'Montserrat', sans-serif;
     }
 
     #deleteBtn,
     #updateBtn,
-    #doneBtn {
+    #doneBtn,
+    #settingsBtn {
         max-width: 40px;
         max-height: 40px;
+        float: right;
+    }
+
+    #darkModeBtn,
+    #darkModeLabel {
+        max-width: 50px;
+        max-height: 50px;
+        display: inline;
+    }
+
+    #settingsBtn,
+    #taskerTitle {
+        margin: 10px;
     }
 
     #footer {
         bottom: 0;
         background-color: rgb(41, 42, 47);
+        color: rgb(245, 245, 245);;
         text-align: center;
         position: fixed;
         width: 100%;

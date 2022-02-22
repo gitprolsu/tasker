@@ -1,7 +1,24 @@
 
+let postArea = document.querySelector("#postArea");
+postArea.innerHTML = `
+    <div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-6 col-sm-3">
+        <input type="text" class="form-control inputBoxLight" id="taskName" placeholder="Enter your task here...">
+    </div>
+    <div class="col-6 col-sm-3" style="display: none;">
+        <input type="text" class="form-control inputBoxLight" id="taskDescription" placeholder="Any additional notes?">
+    </div>
+    <div class="col-12 col-sm-2">
+        <button type="button" class="btn btn-outline-success" id="newBtn">
+            post
+        </button>
+    </div>
+    </div>
+    `
 function retrieveAllTasks() {
-    let storedTasks, dataObject;
-    let taskerObject = localStorage.taskerObject;
+
+    let storedTasks, taskerObject = localStorage.taskerObject;
 
     if (!taskerObject) {
         localStorage.setItem("taskerObject", "");
@@ -75,19 +92,11 @@ function retrieveAllTasks() {
     };
 
     let activeTasks = document.getElementsByClassName("postedTask");
-    
-    for (var i = 0; i < activeTasks.length; i++) {
-        let viewport = this.visualViewport.width;
 
-        if (viewport < 1500) {
-            activeTasks[i].parentElement.addEventListener("touchStart", function (data) {
-                showUpdateTasker(data);
-            });
-        } else {
-            activeTasks[i].parentElement.addEventListener("click", function (data) {
-                showUpdateTasker(data);
-            });
-        };
+    for (var i = 0; i < activeTasks.length; i++) {
+        activeTasks[i].parentElement.addEventListener("click", function (data) {
+            showUpdateTasker(data);
+        });
     };
 };
 
@@ -117,7 +126,7 @@ function createNewTask() {
                     <div class="col-12 col-sm-12">
                         <div class="row">
                             <div class="col-12 col-sm-12">
-                                <h4 class="postedTask">${taskTitle}</h4>
+                                <h4 class="postedTask" onclick="showUpdateTasker('${taskId}')">${taskTitle}</h4>
                             </div>
                         </div>
                         <div class="row">
@@ -170,6 +179,7 @@ function createNewTask() {
             }
             localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
         };
+        window.location.reload();
     };
 };
 
@@ -185,10 +195,10 @@ function showUpdateTasker(data) {
     tempElement.innerHTML = `
     <div class="row">
         <div class="col-12 col-sm-4">
-            <input id="taskToUpdate" style="background-color: rgb(33, 34, 39); color: rgb(245, 245, 245)" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
+            <input id="taskToUpdate" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
         </div>
         <div class="col-12 col-sm-4">
-            <input id="descriptionToUpdate" style="background-color: rgb(33, 34, 39); color: rgb(245, 245, 245)" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
+            <input id="descriptionToUpdate" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
         </div>
         <div class="col-4 col-sm-1">
             <img src="icons/refresh.png" type="button" onclick="postUpdate('${taskId}')" id="updateBtn" title="update"/>
@@ -258,9 +268,98 @@ function taskDone(dataId) {
     window.location.reload();
 };
 
-retrieveAllTasks();
+function setScreenMode() {
 
+    let currentScreen, taskerSettings = localStorage.taskerSettings;
+
+    if (taskerSettings) {
+        taskerSettings = JSON.parse(taskerSettings);
+        if (taskerSettings.screen === "Light") {
+            currentScreen = "lightMode";
+        } else if (taskerSettings.screen === "Dark") {
+            currentScreen = "nightOwl";
+        }
+    } else if (!taskerSettings) {
+        localStorage.setItem("taskerSettings", "");
+        currentScreen = "nightOwl";
+    };
+
+    document.querySelector("body").setAttribute("class", currentScreen);
+};
+
+function settings() {
+    console.log("hello settings!");
+
+    let currentScreenMode, taskerSettings = localStorage.taskerSettings;
+    if (taskerSettings) {
+        taskerSettings = JSON.parse(taskerSettings);
+
+        if (taskerSettings.screen === "Dark") {
+            currentScreenMode = "Dark";
+        } else if (taskerSettings.screen === "Light") {
+            currentScreenMode = "Light";
+        };
+
+    } else if (!taskerSettings) {
+        currentScreenMode = "Dark";
+    };
+
+    console.log(currentScreenMode);
+
+    let fontFamily = "Zen Maru Gothic"
+
+    let settingsElement = document.createElement("div");
+    settingsElement.setAttribute("class", "col-12 col-sm-12");
+
+    settingsElement.innerHTML = `
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-6 col-sm-6">
+                        <p id="darkModeLabel">Screen Mode: <img type="button" onclick="switchScreenMode()" id="darkModeBtn" src="icons/dark-mode.png" title="Screen Mode"/> ${currentScreenMode}</p>
+                    </div>
+                    <!-- <div class="col-6 col-sm-6">
+                        <h6>Font family: <span style="color: tomato;">${fontFamily}</span></h6>
+                    </div> -->
+                </div>
+            </div>
+            <div class="col-sm-2"></div>
+        </div>
+        <hr />
+    `
+    document.getElementById("settingsArea").append(settingsElement);
+};
+
+function switchScreenMode() {
+    console.log("Screen mode changed...");
+
+    let settings = localStorage.taskerSettings;
+    if (!settings) {
+        document.querySelector("body").setAttribute("class", "lightMode");
+        localStorage.setItem("taskerSettings", JSON.stringify({ "screen": "Light" }));
+        console.log("Settings: Light mode");
+    } else if (settings) {
+        settings = JSON.parse(settings);
+        if (settings.screen === "Dark") {
+            document.querySelector("body").setAttribute("class", "lightMode");
+            settings.screen = "Light";
+        } else if (settings.screen === "Light") {
+            document.querySelector("body").setAttribute("class", "nightOwl");
+            settings.screen = "Dark";
+        };
+        localStorage.setItem("taskerSettings", JSON.stringify(settings));
+        console.log(settings);
+    };
+
+    window.location.reload();
+};
+
+// create new tasks
 document.getElementById("newBtn").addEventListener("click", createNewTask);
+
+// adjust page settings
+document.getElementById("settingsBtn").addEventListener("click", settings);
 
 //display optional input box:
 document.getElementById("taskName").addEventListener("keyup", function () {
@@ -272,3 +371,6 @@ document.getElementById("taskName").addEventListener("keyup", function () {
         document.getElementById("taskDescription").value = "";
     }
 });
+
+setScreenMode();
+retrieveAllTasks();
