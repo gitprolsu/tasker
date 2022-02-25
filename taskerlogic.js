@@ -1,7 +1,8 @@
 
 let postArea = document.querySelector("#postArea");
 postArea.innerHTML = `
-    <div class="row">
+    <form>
+    <div class="row form-group">
     <div class="col-sm-2"></div>
     <div class="col-6 col-sm-3">
         <input type="text" class="form-control inputBoxLight" id="taskName" placeholder="Enter your task here...">
@@ -10,20 +11,34 @@ postArea.innerHTML = `
         <input type="text" class="form-control inputBoxLight" id="taskDescription" placeholder="Any additional notes?">
     </div>
     <div class="col-12 col-sm-2">
-        <button type="button" class="btn btn-outline-success" id="newBtn">
+        <button type="submit" class="btn btn-outline-success" id="newBtn">
             post
         </button>
     </div>
     </div>
+    </form>
     `
-function retrieveAllTasks() {
+function retrieveActiveTasks() {
 
     let storedTasks, taskerObject = localStorage.taskerObject;
 
     if (!taskerObject) {
         localStorage.setItem("taskerObject", "");
-    }
-    else {
+
+        let emptyElement = document.createElement("div");
+        emptyElement.setAttribute("class", "row");
+
+        emptyElement.innerHTML = `
+            <div class="col-0 col-sm-1"></div>
+            <div class="col-12 col-sm-11" id="emptyContainer">
+                <h6>No tasks yet! Enter your first task above and press enter or click on 'post'</h6>
+            </div>
+        `
+        let allContainers = document.querySelector("#taskContainer");
+
+        allContainers.prepend(emptyElement);
+    } else {
+
         taskerObject = JSON.parse(taskerObject);
         taskerObject = Object.keys(taskerObject);
         storedTasks = [];
@@ -39,11 +54,6 @@ function retrieveAllTasks() {
             let status, color, timeStat, timeStatColor, taskTimeStamp, foundTask, taskId = taskIndex;
             foundTask = JSON.parse(localStorage.taskerObject);
             foundTask = foundTask[taskId];
-
-            if (foundTask.completed === false) {
-                status = "Active";
-                color = "tomato";
-            };
 
             if (foundTask.updatedTime === "") {
                 timeStat = "Posted";
@@ -62,11 +72,13 @@ function retrieveAllTasks() {
                 timeStatColor = "green";
                 taskTimeStamp = foundTask.timeCompleted;
             };
+            if (foundTask.completed === false) {
+                status = "Active";
+                color = "tomato";
+                let divElement = document.createElement("div");
+                divElement.setAttribute("id", foundTask.taskId);
 
-            let divElement = document.createElement("div");
-            divElement.setAttribute("id", foundTask.taskId);
-
-            divElement.innerHTML = `
+                divElement.innerHTML = `
                     <div class="col-12 col-sm-12">
                         <div class="row">
                             <div class="col-12 col-sm-12">
@@ -77,17 +89,18 @@ function retrieveAllTasks() {
                             <div class="col-12 col-sm-12 taskDescription">
                                 <p>${foundTask.taskDescription}</p>
                             </div>
-                            <div class="col-3 col-sm-2 taskStatus">
+                            <div class="col-3 col-sm-4 taskStatus">
                                 <h6>Status: <span style="color: ${color};">${status}</span></h6>
                             </div>
-                            <div class="col-9 col-sm-5 taskTimeStamp">
+                            <div class="col-9 col-sm-8 taskTimeStamp">
                                 <h6>${timeStat}: <span style="color: ${timeStatColor};">${taskTimeStamp}</span></h6>
                             </div>
                         </div>
                     </div>
                     <hr/>
                     `
-            document.getElementById("taskContainer").prepend(divElement);
+                document.getElementById("taskContainer").prepend(divElement);
+            };
         };
     };
 
@@ -97,6 +110,44 @@ function retrieveAllTasks() {
         activeTasks[i].parentElement.addEventListener("click", function (data) {
             showUpdateTasker(data);
         });
+    };
+};
+
+function retrieveCompletedTasks() {
+    let storedtaskIds, taskerObject = localStorage.taskerObject;
+    taskerObject = JSON.parse(taskerObject);
+    taskerObject = Object.keys(taskerObject);
+    storedtaskIds = [];
+
+    for (var i = 0; i < taskerObject.length; i++) {
+        storedtaskIds.push(taskerObject[i]);
+    };
+
+    if (storedtaskIds)
+        storedtaskIds.forEach(taskId => retrieveDoneTasks(taskId));
+
+    function retrieveDoneTasks(taskArg) {
+        let foundTask, index = taskArg;
+        foundTask = JSON.parse(localStorage.taskerObject);
+
+        if(foundTask[index].completed) {
+            let divElement = document.createElement("div");
+            divElement.setAttribute("id", `${foundTask[index].taskId}done`);
+
+            divElement.innerHTML = `
+                <div class="row">
+                    <div class="col-12 col-sm-12">
+                        <h4 type="button" class="postedTask">${foundTask[index].taskTitle}</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 col-sm-12 taskTimeStamp">
+                        <h6>Completed on: <span style="color: green;">${foundTask[index].timeCompleted}</span></h6>
+                    </div>
+                </div>
+            <hr/>`
+            document.getElementById("tasksCompleted").append(divElement);
+        };
     };
 };
 
@@ -118,32 +169,6 @@ function createNewTask() {
         for (var i = 0; i < 5; i++) {
             timeStamp += `${newDate[i]} `;
         };
-
-        let divElement = document.createElement("div");
-        divElement.setAttribute("id", taskId);
-
-        divElement.innerHTML = `
-                    <div class="col-12 col-sm-12">
-                        <div class="row">
-                            <div class="col-12 col-sm-12">
-                                <h4 class="postedTask" type="button">${taskTitle}</h4>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12 col-sm-12 taskDescription">
-                                <p>${taskDescription}</p>
-                            </div>
-                            <div class="col-3 col-sm-2 taskStatus">
-                                <h6>Status: <span style="color: tomato;">Active</span></h6>
-                            </div>
-                            <div class="col-9 col-sm-5 taskTimeStamp">
-                                <h6>Posted: <span style="color: tomato;">${timeStamp}</span></h6>
-                            </div>
-                        </div>
-                    </div>
-                    <hr/>
-                    `
-        document.getElementById("taskContainer").prepend(divElement);
 
         document.getElementById("taskName").value = "";
         document.getElementById("taskDescription").value = "";
@@ -179,8 +204,8 @@ function createNewTask() {
             }
             localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
         };
-        window.location.reload();
     };
+    window.location.reload();
 };
 
 function showUpdateTasker(data) {
@@ -194,19 +219,19 @@ function showUpdateTasker(data) {
 
     tempElement.innerHTML = `
     <div class="row">
-        <div class="col-12 col-sm-4">
+        <div class="col-12 col-sm-12 col-md-4">
             <input id="taskToUpdate" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
         </div>
-        <div class="col-12 col-sm-4">
+        <div class="col-12 col-sm-12 col-md-4">
             <input id="descriptionToUpdate" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
         </div>
-        <div class="col-4 col-sm-1">
+        <div class="col-4 col-sm-2 col-md-1">
             <img src="icons/refresh.png" type="button" onclick="postUpdate('${taskId}')" id="updateBtn" title="update"/>
         </div>
-        <div class="col-4 col-sm-1">
+        <div class="col-4 col-sm-2 col-md-1">
             <img src="icons/trash (1).png" type="button" onclick="deletePost('${taskId}')" id="deleteBtn" title="delete"/>
         </div>
-        <div class="col-4 col-sm-1">
+        <div class="col-4 col-sm-2 col-md-1">
             <img src="icons/done.png" type="button" onclick="taskDone('${taskId}')" id="doneBtn" title="complete"/>
         </div>
     </div>
@@ -268,7 +293,7 @@ function taskDone(dataId) {
     window.location.reload();
 };
 
-function setScreenMode() {
+function initialAppSettings() {
 
     let currentScreen, taskerSettings = localStorage.taskerSettings;
 
@@ -280,8 +305,12 @@ function setScreenMode() {
             currentScreen = "nightOwl";
         }
     } else if (!taskerSettings) {
-        localStorage.setItem("taskerSettings", "");
-        currentScreen = "nightOwl";
+        let appSettings = {
+            "version": 1.01,
+            "screen": "Light",
+        };
+        localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
+        currentScreen = "lightMode";
     };
 
     document.querySelector("body").setAttribute("class", currentScreen);
@@ -300,13 +329,9 @@ function settings() {
             currentScreenMode = "Light";
         };
 
-    } else if (!taskerSettings) {
-        currentScreenMode = "Dark";
     };
 
     console.log(currentScreenMode);
-
-    let fontFamily = "Zen Maru Gothic"
 
     let settingsElement = document.createElement("div");
     settingsElement.setAttribute("class", "col-12 col-sm-12");
@@ -316,12 +341,12 @@ function settings() {
             <div class="col-sm-2"></div>
             <div class="col-sm-8">
                 <div class="row">
-                    <div class="col-6 col-sm-6">
+                    <div class="col-3 col-sm-3">
                         <p id="darkModeLabel">Screen Mode: <img type="button" onclick="switchScreenMode()" id="darkModeBtn" src="icons/dark-mode.png" title="Screen Mode"/> ${currentScreenMode}</p>
                     </div>
-                    <!-- <div class="col-6 col-sm-6">
-                        <h6>Font family: <span style="color: tomato;">${fontFamily}</span></h6>
-                    </div> -->
+                    <div class="col-3 col-sm-3">
+                        <p id="deleteStorage">Delete all tasks: <img type="button" onclick="factoryReset()" id="resetBtn" src="icons/reset.png" title="Reset settings and delete stored tasks" />                                
+                    </div>
                 </div>
             </div>
             <div class="col-sm-2"></div>
@@ -332,14 +357,10 @@ function settings() {
 };
 
 function switchScreenMode() {
-    console.log("Screen mode changed...");
 
     let settings = localStorage.taskerSettings;
-    if (!settings) {
-        document.querySelector("body").setAttribute("class", "lightMode");
-        localStorage.setItem("taskerSettings", JSON.stringify({ "screen": "Light" }));
-        console.log("Settings: Light mode");
-    } else if (settings) {
+
+    if (settings) {
         settings = JSON.parse(settings);
         if (settings.screen === "Dark") {
             document.querySelector("body").setAttribute("class", "lightMode");
@@ -349,19 +370,42 @@ function switchScreenMode() {
             settings.screen = "Dark";
         };
         localStorage.setItem("taskerSettings", JSON.stringify(settings));
-        console.log(settings);
+    };
+    window.location.reload();
+};
+
+function factoryReset() {
+
+    let confirmed = confirm("Are you sure you want to delete all your tasks from this computer?");
+
+    if (confirmed) {
+        let taskerObject = localStorage.taskerObject;
+        let taskerSettings = localStorage.taskerSettings;
+
+        if (taskerObject)
+            localStorage.removeItem("taskerObject");
+
+        if (taskerSettings)
+            localStorage.removeItem("taskerSettings");
     };
 
     window.location.reload();
 };
 
 // create new tasks
-document.getElementById("newBtn").addEventListener("click", createNewTask);
+document.getElementById("newBtn").addEventListener("click", function (event) {
+    event.preventDefault();
+    createNewTask();
+});
 
 // adjust page settings
-document.getElementById("settingsBtn").addEventListener("click", settings);
+document.getElementById("settingsBtn").addEventListener("click", function () {
+    let settingsUp = document.getElementById("settingsArea").children[0];
+    if (!settingsUp)
+        settings();
+});
 
-//display optional input box:
+// display optional input box:
 document.getElementById("taskName").addEventListener("keyup", function () {
     let enteredValue = this.value;
     if (enteredValue) {
@@ -372,5 +416,6 @@ document.getElementById("taskName").addEventListener("keyup", function () {
     }
 });
 
-setScreenMode();
-retrieveAllTasks();
+initialAppSettings();
+retrieveActiveTasks();
+retrieveCompletedTasks();
