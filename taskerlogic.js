@@ -1,4 +1,5 @@
 let postArea = document.querySelector("#postArea");
+
 postArea.innerHTML = `
     <form>
     <div class="row form-group">
@@ -16,68 +17,43 @@ postArea.innerHTML = `
     </div>
     </div>
     </form>
-    `
-function retrieveActiveTasks() {
+    `;
 
-    let storedTasks, taskerObject = localStorage.taskerObject;
+function retrieveTasks(taskIndex) {
+  let status,
+    color,
+    timeStat,
+    timeStatColor,
+    taskTimeStamp,
+    foundTask,
+    taskId = taskIndex;
+  foundTask = JSON.parse(localStorage.taskerObject);
+  foundTask = foundTask[taskId];
 
-    if (!taskerObject) {
-        localStorage.setItem("taskerObject", "");
+  if (foundTask.updatedTime === "") {
+    timeStat = "Posted";
+    timeStatColor = "tomato";
+    taskTimeStamp = foundTask.timeStamp;
+  } else {
+    timeStat = "Updated";
+    timeStatColor = "rgb(0, 113, 365)";
+    taskTimeStamp = foundTask.updatedTime;
+  }
 
-        let emptyElement = document.createElement("div");
-        emptyElement.setAttribute("class", "row");
+  if (foundTask.completed === true) {
+    status = "Done";
+    color = "green";
+    timeStat = "Completed";
+    timeStatColor = "green";
+    taskTimeStamp = foundTask.timeCompleted;
+  } else if (foundTask.completed === false) {
+    status = "Active";
+    color = "tomato";
+    let divElement = document
+      .createElement("div")
+      .setAttribute("id", foundTask.taskId);
 
-        emptyElement.innerHTML = `
-            <div class="col-0 col-sm-1"></div>
-            <div class="col-12 col-sm-11" id="emptyContainer">
-                <h6>No tasks yet! Enter your first task above and press enter or click on 'post'</h6>
-            </div>
-        `
-        let allContainers = document.querySelector("#taskContainer");
-
-        allContainers.prepend(emptyElement);
-    } else {
-
-        taskerObject = JSON.parse(taskerObject);
-        taskerObject = Object.keys(taskerObject);
-        storedTasks = [];
-
-        for (var i = 0; i < taskerObject.length; i++) {
-            storedTasks.push(taskerObject[i]);
-        };
-
-        if (storedTasks)
-            storedTasks.forEach(task => retrieveTasks(task));
-
-        function retrieveTasks(taskIndex) {
-            let status, color, timeStat, timeStatColor, taskTimeStamp, foundTask, taskId = taskIndex;
-            foundTask = JSON.parse(localStorage.taskerObject);
-            foundTask = foundTask[taskId];
-
-            if (foundTask.updatedTime === "") {
-                timeStat = "Posted";
-                timeStatColor = "tomato";
-                taskTimeStamp = foundTask.timeStamp;
-            } else if (foundTask.updatedTime !== "") {
-                timeStat = "Updated";
-                timeStatColor = "rgb(0, 113, 365)";
-                taskTimeStamp = foundTask.updatedTime;
-            };
-
-            if (foundTask.completed === true) {
-                status = "Done";
-                color = "green";
-                timeStat = "Completed";
-                timeStatColor = "green";
-                taskTimeStamp = foundTask.timeCompleted;
-            };
-            if (foundTask.completed === false) {
-                status = "Active";
-                color = "tomato";
-                let divElement = document.createElement("div");
-                divElement.setAttribute("id", foundTask.taskId);
-
-                divElement.innerHTML = `
+    divElement.innerHTML = `
                     <div class="col-12 col-sm-12">
                         <div class="row">
                             <div class="col-12 col-sm-12">
@@ -97,43 +73,78 @@ function retrieveActiveTasks() {
                         </div>
                     </div>
                     <hr/>
-                    `
-                document.getElementById("taskContainer").prepend(divElement);
-            };
-        };
-    };
+                    `;
+    document.getElementById("taskContainer").prepend(divElement);
+  }
+}
 
-    let activeTasks = document.getElementsByClassName("postedTask");
+function retrieveActiveTasks() {
+  let storedTasks = [];
+  let allContainers;
+  let taskerObject = localStorage.taskerObject;
 
-    for (var i = 0; i < activeTasks.length; i++) {
-        activeTasks[i].parentElement.addEventListener("click", function (data) {
-            showUpdateTasker(data);
-        });
-    };
-};
-
-function retrieveCompletedTasks() {
-    let storedtaskIds, taskerObject = localStorage.taskerObject;
+  if (taskerObject !== undefined) {
     taskerObject = JSON.parse(taskerObject);
     taskerObject = Object.keys(taskerObject);
-    storedtaskIds = [];
 
     for (var i = 0; i < taskerObject.length; i++) {
-        storedtaskIds.push(taskerObject[i]);
-    };
+      storedTasks.push(taskerObject[i]);
+    }
+  }
 
-    if (storedtaskIds)
-        storedtaskIds.forEach(taskId => retrieveDoneTasks(taskId));
+  if (storedTasks) {
+    if (storedTasks) storedTasks.forEach((task) => retrieveTasks(task));
+  } else if (taskerObject == undefined) {
+    localStorage.setItem("taskerObject", "");
 
-    function retrieveDoneTasks(taskArg) {
-        let foundTask, index = taskArg;
-        foundTask = JSON.parse(localStorage.taskerObject);
+    let emptyElement = document.createElement("div");
+    emptyElement.setAttribute("class", "row");
 
-        if(foundTask[index].completed) {
-            let divElement = document.createElement("div");
-            divElement.setAttribute("id", `${foundTask[index].taskId}done`);
+    emptyElement.innerHTML = `
+            <div class="col-0 col-sm-1"></div>
+            <div class="col-12 col-sm-11" id="emptyContainer">
+                <h6>No tasks yet! Enter your first task above and press enter or click on 'post'</h6>
+            </div>
+        `;
 
-            divElement.innerHTML = `
+    allContainers = document
+      .querySelector("#taskContainer")
+      .prepend(emptyElement);
+  }
+
+  let activeTasks = document.getElementsByClassName("postedTask");
+
+  for (var i = 0; i < activeTasks.length; i++) {
+    activeTasks[i].parentElement.addEventListener("click", function (data) {
+      showUpdateTasker(data);
+    });
+  }
+}
+
+function retrieveCompletedTasks() {
+  let storedtaskIds,
+    taskerObject = localStorage.taskerObject;
+  taskerObject = JSON.parse(taskerObject);
+  taskerObject = Object.keys(taskerObject);
+  storedtaskIds = [];
+
+  for (var i = 0; i < taskerObject.length; i++) {
+    storedtaskIds.push(taskerObject[i]);
+  }
+
+  if (storedtaskIds)
+    storedtaskIds.forEach((taskId) => retrieveDoneTasks(taskId));
+
+  function retrieveDoneTasks(taskArg) {
+    let foundTask,
+      index = taskArg;
+    foundTask = JSON.parse(localStorage.taskerObject);
+
+    if (foundTask[index].completed) {
+      let divElement = document.createElement("div");
+      divElement.setAttribute("id", `${foundTask[index].taskId}done`);
+
+      divElement.innerHTML = `
                 <div class="row">
                     <div class="col-12 col-sm-12">
                         <h4 type="button" class="postedTask">${foundTask[index].taskTitle}</h4>
@@ -144,79 +155,60 @@ function retrieveCompletedTasks() {
                         <h6>Completed on: <span style="color: green;">${foundTask[index].timeCompleted}</span></h6>
                     </div>
                 </div>
-            <hr/>`
-            document.getElementById("tasksCompleted").append(divElement);
-        };
-    };
-};
+            <hr/>`;
+      document.getElementById("tasksCompleted").append(divElement);
+    }
+  }
+}
 
 function createNewTask() {
+  let taskDescription, timeStamp, newDate, taskId;
+  let taskTitle = document.getElementById("taskName").value;
 
-    let taskTitle = document.getElementById("taskName").value;
+  if (!taskTitle) {
+    alert("task name required!");
+    return;
+  } else {
+    taskDescription = document.getElementById("taskDescription").value;
+    timeStamp = "";
+    newDate = new Date().toString().split(" ");
+    taskId = newDate[1] + newDate[2] + newDate[3] + newDate[4];
 
-    if (!taskTitle) {
-        alert("task name required!")
-    } else {
+    for (var i = 0; i < 5; i++) {
+      timeStamp += `${newDate[i]} `;
+    }
 
-        let taskDescription = document.getElementById("taskDescription").value;
-        let timeStamp = "";
-        let taskId, stringDate, newDate = new Date();
-        stringDate = newDate.toString();
-        newDate = stringDate.split(" ");
-        taskId = newDate[1] + newDate[2] + newDate[3] + newDate[4];
+    let taskToSave = {};
+    // let currentLocalStorage = JSON.parse(localStorage.getItem("taskerObject"));
 
-        for (var i = 0; i < 5; i++) {
-            timeStamp += `${newDate[i]} `;
-        };
-
-        document.getElementById("taskName").value = "";
-        document.getElementById("taskDescription").value = "";
-        document.getElementById("taskDescription").parentElement.style.display = "none";
-
-        let savedTask = {};
-        let currentLocalStorage;
-
-        if (localStorage.getItem("taskerObject") === "") {
-            savedTask[taskId] = {
-                taskId,
-                stringDate,
-                taskTitle,
-                taskDescription,
-                timeStamp,
-                "updatedTime": "",
-                "timeCompleted": "",
-                "completed": false,
-            };
-
-            localStorage.setItem("taskerObject", JSON.stringify(savedTask));
-        } else {
-            currentLocalStorage = JSON.parse(localStorage.getItem("taskerObject"));
-            currentLocalStorage[taskId] = {
-                taskId,
-                stringDate,
-                taskTitle,
-                taskDescription,
-                timeStamp,
-                "updatedTime": "",
-                "timeCompleted": "",
-                "completed": false,
-            }
-            localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-        };
+    taskToSave[taskId] = {
+      taskId,
+      newDate,
+      taskTitle,
+      taskDescription,
+      timeStamp,
+      updatedTime: "",
+      timeCompleted: "",
+      completed: false,
     };
-    window.location.reload();
-};
+    localStorage.setItem("taskerObject", JSON.stringify(taskToSave));
+  }
+
+  // document.getElementById("taskName").value = "";
+  // document.getElementById("taskDescription").value = "";
+  // document.getElementById("taskDescription").parentElement.style.display = "none";
+  window.location.reload();
+}
 
 function showUpdateTasker(data) {
+  let taskId = data.path[4].id;
 
-    let taskId = data.path[4].id;
+  let taskerObject = JSON.parse(localStorage.taskerObject);
+  taskerObject = taskerObject[taskId];
 
-    let taskerObject = JSON.parse(localStorage.taskerObject);
-    taskerObject = taskerObject[taskId];
+  let tempElement = document.createElement("div");
 
-    let tempElement = document.createElement("div");
-
-    tempElement.innerHTML = `
+  tempElement.innerHTML = `
     <div class="row">
         <div class="col-12 col-sm-12 col-md-4">
             <input id="taskToUpdate" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
@@ -235,107 +227,98 @@ function showUpdateTasker(data) {
         </div>
     </div>
     <hr/>
-    `
-    document.getElementById(taskId).replaceWith(tempElement);
-};
+    `;
+  document.getElementById(taskId).replaceWith(tempElement);
+}
 
 function postUpdate(dataId) {
-    // console.log(`Update post with id: ${dataId}`);
+  // console.log(`Update post with id: ${dataId}`);
 
-    let currentLocalStorage = JSON.parse(localStorage.taskerObject);
+  let currentLocalStorage = JSON.parse(localStorage.taskerObject);
 
-    let updatedTitle = document.getElementById("taskToUpdate").value;
-    let updatedDescription = document.getElementById("descriptionToUpdate").value;
+  let updatedTitle = document.getElementById("taskToUpdate").value;
+  let updatedDescription = document.getElementById("descriptionToUpdate").value;
 
-    if (!updatedTitle) {
-        window.location.reload();
-    } else {
-        currentLocalStorage[dataId].taskTitle = updatedTitle;
-        currentLocalStorage[dataId].taskDescription = updatedDescription;
-        let newTimeStamp = "";
-        let newDateUpdate = new Date();
-        newDateUpdate = newDateUpdate.toString().split(" ");
-
-        for (var i = 0; i < 5; i++) {
-            newTimeStamp += `${newDateUpdate[i]} `;
-        };
-
-        currentLocalStorage[dataId].updatedTime = newTimeStamp;
-
-        localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-        window.location.reload();
-    };
-};
-
-function deletePost(dataId) {
-    // console.log(`Delete post with id: ${dataId}`);
-    let currentStorage = JSON.parse(localStorage.taskerObject);
-
-    delete currentStorage[dataId];
-    localStorage.setItem("taskerObject", JSON.stringify(currentStorage));
+  if (!updatedTitle) {
     window.location.reload();
-};
+  } else {
+    currentLocalStorage[dataId].taskTitle = updatedTitle;
+    currentLocalStorage[dataId].taskDescription = updatedDescription;
+    let newTimeStamp = "";
+    let newDateUpdate = new Date();
+    newDateUpdate = newDateUpdate.toString().split(" ");
 
-function taskDone(dataId) {
-    // console.log(`Task with id ${dataId} completed. Yay!`);
-    let currentLocalStorage = JSON.parse(localStorage.taskerObject);
-    currentLocalStorage[dataId].completed = true;
-    let completeTimeStamp = "";
-    let completedDate = new Date();
-    completedDate = completedDate.toString().split(" ");
     for (var i = 0; i < 5; i++) {
-        completeTimeStamp += `${completedDate[i]} `;
-    };
+      newTimeStamp += `${newDateUpdate[i]} `;
+    }
 
-    currentLocalStorage[dataId].timeCompleted = completeTimeStamp;
+    currentLocalStorage[dataId].updatedTime = newTimeStamp;
+
     localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
     window.location.reload();
-};
+  }
+}
+
+function deletePost(dataId) {
+  // console.log(`Delete post with id: ${dataId}`);
+  let currentStorage = JSON.parse(localStorage.taskerObject);
+
+  delete currentStorage[dataId];
+  localStorage.setItem("taskerObject", JSON.stringify(currentStorage));
+  window.location.reload();
+}
+
+function taskDone(dataId) {
+  // console.log(`Task with id ${dataId} completed. Yay!`);
+  let currentLocalStorage = JSON.parse(localStorage.taskerObject);
+  currentLocalStorage[dataId].completed = true;
+  let completeTimeStamp = "";
+  let completedDate = new Date();
+  completedDate = completedDate.toString().split(" ");
+  for (var i = 0; i < 5; i++) {
+    completeTimeStamp += `${completedDate[i]} `;
+  }
+
+  currentLocalStorage[dataId].timeCompleted = completeTimeStamp;
+  localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
+  window.location.reload();
+}
 
 function initialAppSettings() {
-
-    let currentScreen, taskerSettings = localStorage.taskerSettings;
-
-    if (taskerSettings) {
-        taskerSettings = JSON.parse(taskerSettings);
-        if (taskerSettings.screen === "Light") {
-            currentScreen = "lightMode";
-        } else if (taskerSettings.screen === "Dark") {
-            currentScreen = "nightOwl";
-        }
-    } else if (!taskerSettings) {
-        let appSettings = {
-            "version": 1.01,
-            "screen": "Light",
-        };
-        localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
-        currentScreen = "lightMode";
+  let appSettings, currentScreen, taskerSettings;
+  if (localStorage.taskerSettings == undefined) {
+    appSettings = {
+      version: 1.01,
+      screen: "Light",
     };
+    currentScreen = "lightMode";
+    localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
+  }
 
-    document.querySelector("body").setAttribute("class", currentScreen);
-};
+  document.querySelector("body").setAttribute("class", currentScreen);
+}
 
 function settings() {
-    console.log("hello settings!");
+  console.log("hello settings!");
 
-    let currentScreenMode, taskerSettings = localStorage.taskerSettings;
-    if (taskerSettings) {
-        taskerSettings = JSON.parse(taskerSettings);
+  let currentScreenMode,
+    taskerSettings = localStorage.taskerSettings;
+  if (taskerSettings) {
+    taskerSettings = JSON.parse(taskerSettings);
 
-        if (taskerSettings.screen === "Dark") {
-            currentScreenMode = "Dark";
-        } else if (taskerSettings.screen === "Light") {
-            currentScreenMode = "Light";
-        };
+    if (taskerSettings.screen === "Dark") {
+      currentScreenMode = "Dark";
+    } else if (taskerSettings.screen === "Light") {
+      currentScreenMode = "Light";
+    }
+  }
 
-    };
+  console.log(currentScreenMode);
 
-    console.log(currentScreenMode);
+  let settingsElement = document.createElement("div");
+  settingsElement.setAttribute("class", "col-12 col-sm-12");
 
-    let settingsElement = document.createElement("div");
-    settingsElement.setAttribute("class", "col-12 col-sm-12");
-
-    settingsElement.innerHTML = `
+  settingsElement.innerHTML = `
         <div class="row">
             <div class="col-sm-2"></div>
             <div class="col-sm-8">
@@ -351,68 +334,58 @@ function settings() {
             <div class="col-sm-2"></div>
         </div>
         <hr />
-    `
-    document.getElementById("settingsArea").append(settingsElement);
-};
+    `;
+  document.getElementById("settingsArea").append(settingsElement);
+}
 
 function switchScreenMode() {
+  let settings = JSON.parse(localStorage.taskerSettings);
 
-    let settings = localStorage.taskerSettings;
-
-    if (settings) {
-        settings = JSON.parse(settings);
-        if (settings.screen === "Dark") {
-            document.querySelector("body").setAttribute("class", "lightMode");
-            settings.screen = "Light";
-        } else if (settings.screen === "Light") {
-            document.querySelector("body").setAttribute("class", "nightOwl");
-            settings.screen = "Dark";
-        };
-        localStorage.setItem("taskerSettings", JSON.stringify(settings));
-    };
-    window.location.reload();
-};
+  if (settings.screen === "Dark") {
+    document.querySelector("body").setAttribute("class", "lightMode");
+    settings.screen = "Light";
+  } else if (settings.screen === "Light") {
+    document.querySelector("body").setAttribute("class", "nightOwl");
+    settings.screen = "Dark";
+  }
+  localStorage.setItem("taskerSettings", JSON.stringify(settings));
+  window.location.reload();
+}
 
 function factoryReset() {
+  let confirmed = confirm(
+    "Are you sure you want to delete all your tasks from this computer?"
+  );
 
-    let confirmed = confirm("Are you sure you want to delete all your tasks from this computer?");
-
-    if (confirmed) {
-        let taskerObject = localStorage.taskerObject;
-        let taskerSettings = localStorage.taskerSettings;
-
-        if (taskerObject)
-            localStorage.removeItem("taskerObject");
-
-        if (taskerSettings)
-            localStorage.removeItem("taskerSettings");
-    };
-
+  if (confirmed) {
+    localStorage.removeItem("taskerObject");
+    localStorage.removeItem("taskerSettings");
     window.location.reload();
-};
+  }
+}
 
 // create new tasks
 document.getElementById("newBtn").addEventListener("click", function (event) {
-    event.preventDefault();
-    createNewTask();
+  event.preventDefault();
+  createNewTask();
 });
 
 // adjust page settings
 document.getElementById("settingsBtn").addEventListener("click", function () {
-    let settingsUp = document.getElementById("settingsArea").children[0];
-    if (!settingsUp)
-        settings();
+  let settingsUp = document.getElementById("settingsArea").children[0];
+  if (!settingsUp) settings();
 });
 
 // display optional input box:
 document.getElementById("taskName").addEventListener("keyup", function () {
-    let enteredValue = this.value;
-    if (enteredValue) {
-        document.getElementById("taskDescription").parentElement.style.display = "";
-    } else if (!enteredValue) {
-        document.getElementById("taskDescription").parentElement.style.display = "none";
-        document.getElementById("taskDescription").value = "";
-    }
+  let enteredValue = this.value;
+  if (enteredValue) {
+    document.getElementById("taskDescription").parentElement.style.display = "";
+  } else if (!enteredValue) {
+    document.getElementById("taskDescription").parentElement.style.display =
+      "none";
+    document.getElementById("taskDescription").value = "";
+  }
 });
 
 initialAppSettings();
