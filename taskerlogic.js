@@ -1,421 +1,252 @@
+// taskerlogic.js (Refactored)
 
-let postArea = document.querySelector("#postArea");
-postArea.innerHTML = `
-    <form>
-    <div class="row form-group">
+// ===== Utilities =====
+function getFormattedTimestamp(date = new Date()) {
+    return date.toString().split(" ").slice(0, 5).join(" ");
+}
+
+function getTaskerObject() {
+    try {
+        return JSON.parse(localStorage.getItem("taskerObject") || "{}");
+    } catch (e) {
+        console.error("Failed to parse taskerObject:", e);
+        return {};
+    }
+}
+
+function setTaskerObject(obj) {
+    localStorage.setItem("taskerObject", JSON.stringify(obj));
+}
+
+function getTaskStatus(task) {
+    if (task.completed) {
+        return {
+            status: "Done",
+            color: "green",
+            label: "Completed",
+            timestamp: task.timeCompleted
+        };
+    } else if (task.updatedTime) {
+        return {
+            status: "Active",
+            color: "tomato",
+            label: "Updated",
+            timestamp: task.updatedTime
+        };
+    } else {
+        return {
+            status: "Active",
+            color: "tomato",
+            label: "Posted",
+            timestamp: task.timeStamp
+        };
+    }
+}
+
+// ===== UI Handling =====
+document.querySelector("#postArea").innerHTML = `
+<form>
+  <div class="row form-group">
     <div class="col-sm-2"></div>
     <div class="col-6 col-sm-3">
-        <input type="text" class="form-control inputBoxLight" id="taskName" placeholder="Enter your task here...">
+      <input type="text" class="form-control inputBoxLight" id="taskName" placeholder="Enter your task here...">
     </div>
     <div class="col-6 col-sm-3" style="display: none;">
-        <input type="text" class="form-control inputBoxLight" id="taskDescription" placeholder="Any additional notes?">
+      <input type="text" class="form-control inputBoxLight" id="taskDescription" placeholder="Any additional notes?">
     </div>
     <div class="col-12 col-sm-2">
-        <button type="submit" class="btn btn-outline-success" id="newBtn">
-            post
-        </button>
+      <button type="submit" class="btn btn-outline-success" id="newBtn">post</button>
     </div>
-    </div>
-    </form>
-    `
-function retrieveActiveTasks() {
+  </div>
+</form>
+`;
 
-    let storedTasks, taskerObject = localStorage.taskerObject;
+function renderTasks() {
+    const container = document.getElementById("taskContainer");
+    container.innerHTML = "";
 
-    if (!taskerObject) {
-        localStorage.setItem("taskerObject", "");
+    const tasks = getTaskerObject();
+    const keys = Object.keys(tasks);
 
-        let emptyElement = document.createElement("div");
-        emptyElement.setAttribute("class", "row");
-
-        emptyElement.innerHTML = `
-            <div class="col-0 col-sm-1"></div>
-            <div class="col-12 col-sm-11" id="emptyContainer">
+    if (keys.length === 0) {
+        container.innerHTML = `
+            <div class="row">
+              <div class="col-0 col-sm-1"></div>
+              <div class="col-12 col-sm-11" id="emptyContainer">
                 <h6>No tasks yet! Enter your first task above and press enter or click on 'post'</h6>
+              </div>
+            </div>`;
+        return;
+    }
+
+    keys.forEach((id) => {
+        const task = tasks[id];
+        const status = getTaskStatus(task);
+
+        if (!task.completed) {
+            const div = document.createElement("div");
+            div.setAttribute("id", id);
+            div.innerHTML = `
+                <div class="col-12 col-sm-12">
+                  <div class="row">
+                    <div class="col-12 col-sm-12">
+                      <h4 type="button" class="postedTask">${task.taskTitle}</h4>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12 col-sm-12 taskDescription">
+                      <p>${task.taskDescription}</p>
+                    </div>
+                    <div class="col-3 col-sm-4 taskStatus">
+                      <h6>Status: <span style="color: ${status.color};">${status.status}</span></h6>
+                    </div>
+                    <div class="col-9 col-sm-8 taskTimeStamp">
+                      <h6>${status.label}: <span style="color: ${status.color};">${status.timestamp}</span></h6>
+                    </div>
+                  </div>
+                </div>
+                <hr/>
+            `;
+            container.prepend(div);
+
+            div.querySelector(".postedTask").addEventListener("click", (e) => {
+                showUpdateTasker(e, id);
+            });
+        }
+    });
+}
+
+function renderCompletedTasks() {
+    const container = document.getElementById("tasksCompleted");
+    container.innerHTML = "";
+    const tasks = getTaskerObject();
+
+    Object.values(tasks).forEach(task => {
+        if (task.completed) {
+            const div = document.createElement("div");
+            div.setAttribute("id", `${task.taskId}done`);
+            div.innerHTML = `
+                <div class="row">
+                  <div class="col-12 col-sm-12">
+                    <h4 type="button" class="postedTask">${task.taskTitle}</h4>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12 col-sm-12 taskTimeStamp">
+                    <h6>Completed on: <span style="color: green;">${task.timeCompleted}</span></h6>
+                  </div>
+                </div>
+                <hr/>
+            `;
+            container.appendChild(div);
+        }
+    });
+}
+
+function showUpdateTasker(e, id) {
+    const task = getTaskerObject()[id];
+    const container = document.createElement("div");
+
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <input id="taskToUpdate" value="${task.taskTitle}" class="form-control" />
             </div>
-        `
-        let allContainers = document.querySelector("#taskContainer");
-
-        allContainers.prepend(emptyElement);
-    } else {
-
-        taskerObject = JSON.parse(taskerObject);
-        taskerObject = Object.keys(taskerObject);
-        storedTasks = [];
-
-        for (var i = 0; i < taskerObject.length; i++) {
-            storedTasks.push(taskerObject[i]);
-        };
-
-        if (storedTasks)
-            storedTasks.forEach(task => retrieveTasks(task));
-
-        function retrieveTasks(taskIndex) {
-            let status, color, timeStat, timeStatColor, taskTimeStamp, foundTask, taskId = taskIndex;
-            foundTask = JSON.parse(localStorage.taskerObject);
-            foundTask = foundTask[taskId];
-
-            if (foundTask.updatedTime === "") {
-                timeStat = "Posted";
-                timeStatColor = "tomato";
-                taskTimeStamp = foundTask.timeStamp;
-            } else if (foundTask.updatedTime !== "") {
-                timeStat = "Updated";
-                timeStatColor = "rgb(0, 113, 365)";
-                taskTimeStamp = foundTask.updatedTime;
-            };
-
-            if (foundTask.completed === true) {
-                status = "Done";
-                color = "green";
-                timeStat = "Completed";
-                timeStatColor = "green";
-                taskTimeStamp = foundTask.timeCompleted;
-            };
-            if (foundTask.completed === false) {
-                status = "Active";
-                color = "tomato";
-                let divElement = document.createElement("div");
-                divElement.setAttribute("id", foundTask.taskId);
-
-                divElement.innerHTML = `
-                    <div class="col-12 col-sm-12">
-                        <div class="row">
-                            <div class="col-12 col-sm-12">
-                                <h4 type="button" class="postedTask">${foundTask.taskTitle}</h4>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12 col-sm-12 taskDescription">
-                                <p>${foundTask.taskDescription}</p>
-                            </div>
-                            <div class="col-3 col-sm-4 taskStatus">
-                                <h6>Status: <span style="color: ${color};">${status}</span></h6>
-                            </div>
-                            <div class="col-9 col-sm-8 taskTimeStamp">
-                                <h6>${timeStat}: <span style="color: ${timeStatColor};">${taskTimeStamp}</span></h6>
-                            </div>
-                        </div>
-                    </div>
-                    <hr/>
-                    `
-                document.getElementById("taskContainer").prepend(divElement);
-            };
-        };
-    };
-
-    let activeTasks = document.getElementsByClassName("postedTask");
-
-    for (var i = 0; i < activeTasks.length; i++) {
-        activeTasks[i].parentElement.addEventListener("click", function (data) {
-            showUpdateTasker(data);
-        });
-    };
-};
-
-function retrieveCompletedTasks() {
-    let storedtaskIds, taskerObject = localStorage.taskerObject;
-    taskerObject = JSON.parse(taskerObject);
-    taskerObject = Object.keys(taskerObject);
-    storedtaskIds = [];
-
-    for (var i = 0; i < taskerObject.length; i++) {
-        storedtaskIds.push(taskerObject[i]);
-    };
-
-    if (storedtaskIds)
-        storedtaskIds.forEach(taskId => retrieveDoneTasks(taskId));
-
-    function retrieveDoneTasks(taskArg) {
-        let foundTask, index = taskArg;
-        foundTask = JSON.parse(localStorage.taskerObject);
-
-        if(foundTask[index].completed) {
-            let divElement = document.createElement("div");
-            divElement.setAttribute("id", `${foundTask[index].taskId}done`);
-
-            divElement.innerHTML = `
-                <div class="row">
-                    <div class="col-12 col-sm-12">
-                        <h4 type="button" class="postedTask">${foundTask[index].taskTitle}</h4>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-sm-12 taskTimeStamp">
-                        <h6>Completed on: <span style="color: green;">${foundTask[index].timeCompleted}</span></h6>
-                    </div>
-                </div>
-            <hr/>`
-            document.getElementById("tasksCompleted").append(divElement);
-        };
-    };
-};
+            <div class="col-md-4">
+                <input id="descriptionToUpdate" value="${task.taskDescription}" class="form-control" />
+            </div>
+            <div class="col-md-1">
+                <img src="icons/refresh.png" onclick="postUpdate('${id}')" title="update" />
+            </div>
+            <div class="col-md-1">
+                <img src="icons/trash (1).png" onclick="deletePost('${id}')" title="delete" />
+            </div>
+            <div class="col-md-1">
+                <img src="icons/done.png" onclick="taskDone('${id}')" title="complete" />
+            </div>
+        </div>
+        <hr/>
+    `;
+    document.getElementById(id).replaceWith(container);
+}
 
 function createNewTask() {
+    const title = document.getElementById("taskName").value.trim();
+    const description = document.getElementById("taskDescription").value.trim();
+    if (!title) return alert("Task name required!");
 
-    let taskTitle = document.getElementById("taskName").value;
+    const taskId = Date.now().toString();
+    const timeStamp = getFormattedTimestamp();
+    const tasks = getTaskerObject();
 
-    if (!taskTitle) {
-        alert("task name required!")
-    } else {
-
-        let taskDescription = document.getElementById("taskDescription").value;
-        let timeStamp = "";
-        let taskId, stringDate, newDate = new Date();
-        stringDate = newDate.toString();
-        newDate = stringDate.split(" ");
-        taskId = newDate[1] + newDate[2] + newDate[3] + newDate[4];
-
-        for (var i = 0; i < 5; i++) {
-            timeStamp += `${newDate[i]} `;
-        };
-
-        document.getElementById("taskName").value = "";
-        document.getElementById("taskDescription").value = "";
-        document.getElementById("taskDescription").parentElement.style.display = "none";
-
-        let savedTask = {};
-        let currentLocalStorage;
-
-        if (localStorage.getItem("taskerObject") === "") {
-            savedTask[taskId] = {
-                taskId,
-                stringDate,
-                taskTitle,
-                taskDescription,
-                timeStamp,
-                "updatedTime": "",
-                "timeCompleted": "",
-                "completed": false,
-            };
-
-            localStorage.setItem("taskerObject", JSON.stringify(savedTask));
-        } else {
-            currentLocalStorage = JSON.parse(localStorage.getItem("taskerObject"));
-            currentLocalStorage[taskId] = {
-                taskId,
-                stringDate,
-                taskTitle,
-                taskDescription,
-                timeStamp,
-                "updatedTime": "",
-                "timeCompleted": "",
-                "completed": false,
-            }
-            localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-        };
-    };
-    window.location.reload();
-};
-
-function showUpdateTasker(data) {
-
-    let taskId = data.path[4].id;
-
-    let taskerObject = JSON.parse(localStorage.taskerObject);
-    taskerObject = taskerObject[taskId];
-
-    let tempElement = document.createElement("div");
-
-    tempElement.innerHTML = `
-    <div class="row">
-        <div class="col-12 col-sm-12 col-md-4">
-            <input id="taskToUpdate" value="${taskerObject.taskTitle}" type="text" class="form-control" placeholder="Update this task's name...">
-        </div>
-        <div class="col-12 col-sm-12 col-md-4">
-            <input id="descriptionToUpdate" value="${taskerObject.taskDescription}" type="text" class="form-control" placeholder="Update your task's optional description...">
-        </div>
-        <div class="col-4 col-sm-2 col-md-1">
-            <img src="icons/refresh.png" type="button" onclick="postUpdate('${taskId}')" id="updateBtn" title="update"/>
-        </div>
-        <div class="col-4 col-sm-2 col-md-1">
-            <img src="icons/trash (1).png" type="button" onclick="deletePost('${taskId}')" id="deleteBtn" title="delete"/>
-        </div>
-        <div class="col-4 col-sm-2 col-md-1">
-            <img src="icons/done.png" type="button" onclick="taskDone('${taskId}')" id="doneBtn" title="complete"/>
-        </div>
-    </div>
-    <hr/>
-    `
-    document.getElementById(taskId).replaceWith(tempElement);
-};
-
-function postUpdate(dataId) {
-    // console.log(`Update post with id: ${dataId}`);
-
-    let currentLocalStorage = JSON.parse(localStorage.taskerObject);
-
-    let updatedTitle = document.getElementById("taskToUpdate").value;
-    let updatedDescription = document.getElementById("descriptionToUpdate").value;
-
-    if (!updatedTitle) {
-        window.location.reload();
-    } else {
-        currentLocalStorage[dataId].taskTitle = updatedTitle;
-        currentLocalStorage[dataId].taskDescription = updatedDescription;
-        let newTimeStamp = "";
-        let newDateUpdate = new Date();
-        newDateUpdate = newDateUpdate.toString().split(" ");
-
-        for (var i = 0; i < 5; i++) {
-            newTimeStamp += `${newDateUpdate[i]} `;
-        };
-
-        currentLocalStorage[dataId].updatedTime = newTimeStamp;
-
-        localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-        window.location.reload();
-    };
-};
-
-function deletePost(dataId) {
-    // console.log(`Delete post with id: ${dataId}`);
-    let currentStorage = JSON.parse(localStorage.taskerObject);
-
-    delete currentStorage[dataId];
-    localStorage.setItem("taskerObject", JSON.stringify(currentStorage));
-    window.location.reload();
-};
-
-function taskDone(dataId) {
-    // console.log(`Task with id ${dataId} completed. Yay!`);
-    let currentLocalStorage = JSON.parse(localStorage.taskerObject);
-    currentLocalStorage[dataId].completed = true;
-    let completeTimeStamp = "";
-    let completedDate = new Date();
-    completedDate = completedDate.toString().split(" ");
-    for (var i = 0; i < 5; i++) {
-        completeTimeStamp += `${completedDate[i]} `;
+    tasks[taskId] = {
+        taskId,
+        taskTitle: title,
+        taskDescription: description,
+        timeStamp,
+        updatedTime: "",
+        timeCompleted: "",
+        completed: false
     };
 
-    currentLocalStorage[dataId].timeCompleted = completeTimeStamp;
-    localStorage.setItem("taskerObject", JSON.stringify(currentLocalStorage));
-    window.location.reload();
-};
+    setTaskerObject(tasks);
+    document.getElementById("taskName").value = "";
+    document.getElementById("taskDescription").value = "";
+    document.getElementById("taskDescription").parentElement.style.display = "none";
+    renderTasks();
+    renderCompletedTasks();
+}
 
+function postUpdate(id) {
+    const title = document.getElementById("taskToUpdate").value.trim();
+    const description = document.getElementById("descriptionToUpdate").value.trim();
+    if (!title) return renderTasks();
+
+    const tasks = getTaskerObject();
+    tasks[id].taskTitle = title;
+    tasks[id].taskDescription = description;
+    tasks[id].updatedTime = getFormattedTimestamp();
+
+    setTaskerObject(tasks);
+    renderTasks();
+    renderCompletedTasks();
+}
+
+function deletePost(id) {
+    const tasks = getTaskerObject();
+    delete tasks[id];
+    setTaskerObject(tasks);
+    renderTasks();
+    renderCompletedTasks();
+}
+
+function taskDone(id) {
+    const tasks = getTaskerObject();
+    tasks[id].completed = true;
+    tasks[id].timeCompleted = getFormattedTimestamp();
+    setTaskerObject(tasks);
+    renderTasks();
+    renderCompletedTasks();
+}
+
+// ===== Settings =====
 function initialAppSettings() {
+    const settings = JSON.parse(localStorage.getItem("taskerSettings") || '{"screen":"Light"}');
+    document.body.className = settings.screen === "Dark" ? "nightOwl" : "lightMode";
+}
 
-    let currentScreen, taskerSettings = localStorage.taskerSettings;
+// ===== Event Listeners =====
+document.addEventListener("DOMContentLoaded", () => {
+    initialAppSettings();
+    renderTasks();
+    renderCompletedTasks();
 
-    if (taskerSettings) {
-        taskerSettings = JSON.parse(taskerSettings);
-        if (taskerSettings.screen === "Light") {
-            currentScreen = "lightMode";
-        } else if (taskerSettings.screen === "Dark") {
-            currentScreen = "nightOwl";
-        }
-    } else if (!taskerSettings) {
-        let appSettings = {
-            "version": 1.01,
-            "screen": "Light",
-        };
-        localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
-        currentScreen = "lightMode";
-    };
+    document.getElementById("newBtn").addEventListener("click", (e) => {
+        e.preventDefault();
+        createNewTask();
+    });
 
-    document.querySelector("body").setAttribute("class", currentScreen);
-};
-
-function settings() {
-    console.log("hello settings!");
-
-    let currentScreenMode, taskerSettings = localStorage.taskerSettings;
-    if (taskerSettings) {
-        taskerSettings = JSON.parse(taskerSettings);
-
-        if (taskerSettings.screen === "Dark") {
-            currentScreenMode = "Dark";
-        } else if (taskerSettings.screen === "Light") {
-            currentScreenMode = "Light";
-        };
-
-    };
-
-    console.log(currentScreenMode);
-
-    let settingsElement = document.createElement("div");
-    settingsElement.setAttribute("class", "col-12 col-sm-12");
-
-    settingsElement.innerHTML = `
-        <div class="row">
-            <div class="col-sm-2"></div>
-            <div class="col-sm-8">
-                <div class="row">
-                    <div class="col-3 col-sm-3">
-                        <p id="darkModeLabel">Screen Mode: <img type="button" onclick="switchScreenMode()" id="darkModeBtn" src="icons/dark-mode.png" title="Screen Mode"/> ${currentScreenMode}</p>
-                    </div>
-                    <div class="col-3 col-sm-3">
-                        <p id="deleteStorage">Delete all tasks: <img type="button" onclick="factoryReset()" id="resetBtn" src="icons/reset.png" title="Reset settings and delete stored tasks" />                                
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2"></div>
-        </div>
-        <hr />
-    `
-    document.getElementById("settingsArea").append(settingsElement);
-};
-
-function switchScreenMode() {
-
-    let settings = localStorage.taskerSettings;
-
-    if (settings) {
-        settings = JSON.parse(settings);
-        if (settings.screen === "Dark") {
-            document.querySelector("body").setAttribute("class", "lightMode");
-            settings.screen = "Light";
-        } else if (settings.screen === "Light") {
-            document.querySelector("body").setAttribute("class", "nightOwl");
-            settings.screen = "Dark";
-        };
-        localStorage.setItem("taskerSettings", JSON.stringify(settings));
-    };
-    window.location.reload();
-};
-
-function factoryReset() {
-
-    let confirmed = confirm("Are you sure you want to delete all your tasks from this computer?");
-
-    if (confirmed) {
-        let taskerObject = localStorage.taskerObject;
-        let taskerSettings = localStorage.taskerSettings;
-
-        if (taskerObject)
-            localStorage.removeItem("taskerObject");
-
-        if (taskerSettings)
-            localStorage.removeItem("taskerSettings");
-    };
-
-    window.location.reload();
-};
-
-// create new tasks
-document.getElementById("newBtn").addEventListener("click", function (event) {
-    event.preventDefault();
-    createNewTask();
+    document.getElementById("taskName").addEventListener("input", function () {
+        document.getElementById("taskDescription").parentElement.style.display = this.value ? "" : "none";
+    });
 });
-
-// adjust page settings
-document.getElementById("settingsBtn").addEventListener("click", function () {
-    let settingsUp = document.getElementById("settingsArea").children[0];
-    if (!settingsUp)
-        settings();
-});
-
-// display optional input box:
-document.getElementById("taskName").addEventListener("keyup", function () {
-    let enteredValue = this.value;
-    if (enteredValue) {
-        document.getElementById("taskDescription").parentElement.style.display = "";
-    } else if (!enteredValue) {
-        document.getElementById("taskDescription").parentElement.style.display = "none";
-        document.getElementById("taskDescription").value = "";
-    }
-});
-
-initialAppSettings();
-retrieveActiveTasks();
-retrieveCompletedTasks();
