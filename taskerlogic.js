@@ -1,4 +1,4 @@
-// taskerlogic.js (Refactored)
+// taskerlogic.js (Refactored with Settings UI)
 
 // ===== Utilities =====
 function getFormattedTimestamp(date = new Date()) {
@@ -41,6 +41,14 @@ function getTaskStatus(task) {
             timestamp: task.timeStamp
         };
     }
+}
+
+function getTaskerSettings() {
+    return JSON.parse(localStorage.getItem("taskerSettings") || '{"screen":"Light"}');
+}
+
+function setTaskerSettings(settings) {
+    localStorage.setItem("taskerSettings", JSON.stringify(settings));
 }
 
 // ===== UI Handling =====
@@ -229,9 +237,55 @@ function taskDone(id) {
     renderCompletedTasks();
 }
 
-// ===== Settings =====
+function renderSettings() {
+    const currentSettings = getTaskerSettings();
+    const container = document.getElementById("settingsArea");
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-3 col-sm-3">
+                        <p id="darkModeLabel">
+                            Screen Mode: <img type="button" onclick="toggleTheme()" id="darkModeBtn" src="icons/dark-mode.png" title="Switch Theme" />
+                            ${currentSettings.screen}
+                        </p>
+                    </div>
+                    <div class="col-3 col-sm-3">
+                        <p id="deleteStorage">
+                            Delete all tasks: <img type="button" onclick="factoryReset()" id="resetBtn" src="icons/reset.png" title="Reset" />
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2"></div>
+        </div>
+        <hr />
+    `;
+}
+
+function toggleTheme() {
+    const settings = getTaskerSettings();
+    const newTheme = settings.screen === "Dark" ? "Light" : "Dark";
+    settings.screen = newTheme;
+    setTaskerSettings(settings);
+    document.body.className = newTheme === "Dark" ? "nightOwl" : "lightMode";
+    renderSettings();
+}
+
+function factoryReset() {
+    if (confirm("Are you sure you want to delete all your tasks and reset settings?")) {
+        localStorage.removeItem("taskerObject");
+        localStorage.removeItem("taskerSettings");
+        renderTasks();
+        renderCompletedTasks();
+        document.body.className = "lightMode";
+        renderSettings();
+    }
+}
+
 function initialAppSettings() {
-    const settings = JSON.parse(localStorage.getItem("taskerSettings") || '{"screen":"Light"}');
+    const settings = getTaskerSettings();
     document.body.className = settings.screen === "Dark" ? "nightOwl" : "lightMode";
 }
 
@@ -240,6 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initialAppSettings();
     renderTasks();
     renderCompletedTasks();
+    renderSettings();
 
     document.getElementById("newBtn").addEventListener("click", (e) => {
         e.preventDefault();
@@ -248,5 +303,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("taskName").addEventListener("input", function () {
         document.getElementById("taskDescription").parentElement.style.display = this.value ? "" : "none";
+    });
+
+    document.getElementById("settingsBtn").addEventListener("click", () => {
+        renderSettings();
     });
 });
