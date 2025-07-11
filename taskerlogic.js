@@ -28,7 +28,6 @@ function initialAppSettings() {
     };
     currentScreen = "lightMode";
     localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
-    document.querySelector("body").setAttribute("class", currentScreen);
   }
 }
 
@@ -43,11 +42,14 @@ function switchScreenMode() {
     settings.screen = "Light";
   } 
   // window.location.reload();
+  let settingsArea = document.getElementById("settingsArea");
+  settingsArea.setAttribute("style", "display: none;");
 }
 
 function settings() {
   console.log("hello settings!");
-
+  let settingsArea = document.getElementById("settingsArea");
+  settingsArea.setAttribute("style", "display: ;");
   let currentScreenMode =
     localStorage.taskerSettings.screen == "Light" ? "Light" : "Dark";
 
