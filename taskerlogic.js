@@ -132,19 +132,17 @@ function createNewTask() {
 }
 
 function pullTasksFromLocalStorage() {
-  let listKeys,
-    taskList = JSON.parse(localStorage.taskerObject);
-  let storedTasks = [];
-  let allContainers = null;
-
-  if (taskList !== undefined) {
-    listKeys = Object.keys(taskList);
-
+  if(localStorage.taskerObject !== undefined) {
+    let taskList = JSON.parse(localStorage.taskerObject);
+    let storedTasks = [];
+    
+    let listKeys = listKeys = Object.keys(taskList);
     for (var i = 0; i < taskerObject.length; i++) {
       storedTasks.push(taskerObject[i]);
     }
     storedTasks.forEach((task) => displayTasksToScreen(task));
   } else {
+    let allContainers = null;
     localStorage.setItem("taskerObject", "");
 
     let emptyElement = document
