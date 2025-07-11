@@ -20,9 +20,8 @@ postArea.innerHTML = `
     `;
 
 function initialAppSettings() {
-  let taskerSettings, appSettings, currentScreen;
+  let appSettings, currentScreen;
   if (localStorage.taskerSettings == undefined) {
-    taskerSettings = JSON.parse(localStorage.taskerSettings);
     appSettings = {
       version: 1.01,
       screen: "Light",
