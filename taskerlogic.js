@@ -56,9 +56,8 @@ function settings() {
 
   console.log(currentScreenMode);
 
-  let settingsElement = document
-    .createElement("div")
-    .setAttribute("class", "col-12 col-sm-12");
+  let settingsElement = document.createElement("div");
+  settingsElement.setAttribute("class", "col-12 col-sm-12");
 
   settingsElement.innerHTML = `
         <div class="row">
