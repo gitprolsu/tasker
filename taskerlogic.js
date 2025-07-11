@@ -36,15 +36,14 @@ function initialAppSettings() {
 function switchScreenMode() {
   let settings = JSON.parse(localStorage.taskerSettings);
 
-  if (settings.screen === "Dark") {
-    document.querySelector("body").setAttribute("class", "lightMode");
-    settings.screen = "Light";
-  } else if (settings.screen === "Light") {
+  if (settings.screen === "Light") {
     document.querySelector("body").setAttribute("class", "nightOwl");
     settings.screen = "Dark";
-  }
-  localStorage.setItem("taskerSettings", JSON.stringify(settings));
-  window.location.reload();
+  } else if (settings.screen === "Dark") {
+    document.querySelector("body").setAttribute("class", "lightMode");
+    settings.screen = "Light";
+  } 
+  // window.location.reload();
 }
 
 function settings() {
