@@ -28,9 +28,8 @@ function initialAppSettings() {
     };
     currentScreen = "lightMode";
     localStorage.setItem("taskerSettings", JSON.stringify(appSettings));
+    document.querySelector("body").setAttribute("class", currentScreen);
   }
-
-  document.querySelector("body").setAttribute("class", currentScreen);
 }
 
 function switchScreenMode() {
