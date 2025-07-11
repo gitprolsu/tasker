@@ -350,7 +350,7 @@ document.getElementById("newBtn").addEventListener("click", function (event) {
 // adjust page settings
 document.getElementById("settingsBtn").addEventListener("click", function () {
   let settingsUp = document.getElementById("settingsArea").children[0];
-  if (!settingsUp) {
+  if (settingsUp == undefined) {
     settings();
   }
 });
